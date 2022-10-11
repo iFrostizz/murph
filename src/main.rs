@@ -1,6 +1,8 @@
 use clap::Parser;
 
+mod formatter;
 mod parser;
+mod utils;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -14,6 +16,10 @@ struct Args {
 fn main() {
     let args = Args::parse();
     let bytecode = args.bytecode;
-    let transpiled = parser::parse(bytecode)/*.unwrap()*/;
-    println!("{:#?}", &transpiled);
+
+    let parsed = parser::parse(bytecode);
+
+    let huff = formatter::to_huff(parsed);
+
+    println!("{:#?}", &huff);
 }

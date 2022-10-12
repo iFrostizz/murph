@@ -556,6 +556,7 @@ dependencies = [
 [[package]]
 name = "revm"
 version = "2.1.0"
+source = "git+https://github.com/iFrostizz/revm.git?branch=opcode-u8#dc5d5bd48d2e129dd00e20689dbdd0e0893059c1"
 dependencies = [
  "arrayref",
  "auto_impl",
@@ -571,6 +572,7 @@ dependencies = [
 [[package]]
 name = "revm_precompiles"
 version = "1.1.1"
+source = "git+https://github.com/iFrostizz/revm.git?branch=opcode-u8#dc5d5bd48d2e129dd00e20689dbdd0e0893059c1"
 dependencies = [
  "bytes",
  "hashbrown",

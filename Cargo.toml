@@ -8,4 +8,4 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.0.12", features = [ "derive" ]}
 hex = "0.4.3"
-revm = { path = "/home/franfran/Projects/own/revm/crates/revm" }
+revm = { git = "https://github.com/iFrostizz/revm.git", branch = "opcode-u8" }

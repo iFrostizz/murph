@@ -26,6 +26,8 @@ pub fn parse(bytecode: String) -> Parsed {
     let mut jump_table = JumpTable::default();
 
     code.iter().enumerate().for_each(|(i, b)| {
+        let bpc = pc;
+
         if i as u32 >= push_index {
             let op = ROpCode::try_from_u8(*b);
 
@@ -58,13 +60,14 @@ pub fn parse(bytecode: String) -> Parsed {
                     if unfinished {
                         ret.append(&mut vec![Byte::Hex(String::from("<UNFINISHED_PUSH>"))]);
                     }
+                    pc += size as u32;
                 } else {
                     // non PUSH instructions
                     let op_val = opcode.0.unwrap().u8();
 
                     if op_val == JUMPDEST {
                         jump_table.jumpdest.insert(pc);
-                    } else if op_val == JUMP {
+                    } else if op_val == JUMP || op_val == JUMPI {
                         if let Some(source_hex) = parsed.last() {
                             if let Some(Byte::Op(op)) = source_hex.byte.get(0) {
                                 if op.is_push() {
@@ -87,47 +90,26 @@ pub fn parse(bytecode: String) -> Parsed {
                                 }
                             }
                         }
-                    } else if op_val == JUMPI {
-                        /*if let Some(source_hex) = parsed.last() {
-                            if let Some(Byte::Op(op)) = source_hex.byte.get(0) {
-                                if op.is_push() {
-                                    let push_size = op.push_size();
-                                    let hex = source_hex
-                                        .byte
-                                        .get(1..(push_size + 1) as usize)
-                                        .unwrap()
-                                        .iter()
-                                        .map(|b| {
-                                            if let Byte::Hex(h) = b {
-                                                h.to_string()
-                                            } else {
-                                                panic!("PUSH should prepend hex");
-                                            }
-                                        })
-                                        .collect::<String>();
-                                    let pc = u32::from_str_radix(&hex, 16).unwrap();
-                                    jump_table.jump.insert(pc);
-                                }
-                            }
-                        }*/
                     }
 
+                    pc += 1;
                     push_index += 1;
                 }
 
-                SourceByte { byte: ret, pc }
+                SourceByte { byte: ret, pc: bpc }
             } else {
                 // is ending a PUSH
                 push_index += 1;
                 let opcode = ROpCode::try_from_u8(*b);
 
+                pc += 1;
+
                 SourceByte {
                     byte: vec![Byte::Op(OpCode(opcode))],
-                    pc,
+                    pc: bpc,
                 }
             };
 
-            pc += 1;
             parsed.push(code_part);
         }
     });

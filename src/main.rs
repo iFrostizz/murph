@@ -28,9 +28,9 @@ fn main() {
         bytecode
     };
 
-    let parsed = parser::parse(bytecode);
+    let mut parsed = parser::parse(bytecode);
 
-    let huff = formatter::to_huff(parsed);
+    let huff = formatter::to_huff(&mut parsed);
 
     if let Some(path) = args.file {
         let mut file = File::create(path).unwrap();

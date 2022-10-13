@@ -51,36 +51,50 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
             huff.push_str("\n\u{20}\u{20}");
             match byte.get(0).unwrap() {
                 Byte::Hex(h) => {
-                    /*dbg!(&h);
-                    huff.push_str(h);*/
+                    // huff.push_str(h);
                     unreachable!("Having a hex without push: {}", h);
                 }
                 Byte::Op(o) => {
                     let op = match o.0 {
                         Some(oc) => match oc.u8() {
-                            opcode::JUMP => {
+                            opcode::JUMP | opcode::JUMPI => {
+                                let jump_type = if oc.u8() == opcode::JUMP {
+                                    String::from("jump")
+                                } else {
+                                    String::from("jumpi")
+                                };
+
                                 if let Some(dest) = parsed.jt.jump.get(&chunk.pc) {
                                     if let Some(..) = parsed.sb.get(i - 1) {
                                         if parsed.jt.jumpdest.get(dest).is_some() {
-                                            let mut out = String::from("jump_");
-                                            out.push_str(&dest.to_string());
+                                            // let mut out = String::from("jump_");
+                                            let mut out = jump_type;
+                                            out.push_str(&format!("_{}", dest));
 
                                             out
                                         } else {
-                                            String::from("jump_?")
+                                            let mut out = jump_type;
+                                            out.push_str(&format!("_<{}>", chunk.pc));
+
+                                            out
                                         }
                                     } else {
                                         oc.as_str().to_ascii_lowercase()
                                     }
                                 } else {
-                                    panic!("jump without location");
+                                    // panic!("{} without location at pc {}", jump_type, chunk.pc);
                                     // means that no PC has been pushed before
+
+                                    let mut out = jump_type;
+                                    out.push_str(&format!("_<!{}>", chunk.pc));
+
+                                    out
                                 }
                             }
                             opcode::JUMPDEST => {
                                 if parsed.jt.jumpdest.get(&chunk.pc).is_some() {
                                     let mut out = String::from("jumpdest_");
-                                    out.push_str(&chunk.pc.to_string());
+                                    out.push_str(&format!("{}:", chunk.pc));
 
                                     out
                                 } else {
@@ -90,6 +104,7 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
                             _ => oc.as_str().to_ascii_lowercase(),
                         },
                         None => {
+                            // TODO: no None opcode and let the u8 val
                             /*let inv = String::from("invalid");
                             inv.push_str(&format!("<{}>", o.0.u8()));
                             inv*/

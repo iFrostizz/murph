@@ -28,6 +28,7 @@ fn main() {
     };
 
     let parsed = parser::parse(bytecode);
+    // dbg!(&parsed);
 
     let huff = formatter::to_huff(parsed);
 

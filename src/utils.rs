@@ -1,26 +1,38 @@
 pub use revm::OpCode as ROpCode;
 
 #[derive(Debug, Clone, Copy)]
-pub struct OpCode(pub ROpCode);
+pub struct OpCode(pub Option<ROpCode>);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Byte {
     Hex(String),
-    OpCode(OpCode),
+    Op(OpCode),
+}
+
+#[derive(Debug)]
+pub struct SourceByte {
+    pub byte: Vec<Byte>,
+    pub pc: u32,
 }
 
 impl OpCode {
     pub fn is_push(&self) -> bool {
-        let as_u8 = self.0.u8();
+        if let Some(op) = self.0 {
+            let as_u8 = op.u8();
 
-        return as_u8 >= 96 && as_u8 < 128;
+            (96..128).contains(&as_u8)
+        } else {
+            false
+        }
     }
 
     pub fn push_size(&self) -> u8 {
-        let as_u8 = self.0.u8();
+        if let Some(op) = self.0 {
+            let as_u8 = op.u8();
 
-        if as_u8 >= 96 && as_u8 < 128 {
-            return as_u8 - 95;
+            if (96..128).contains(&as_u8) {
+                return as_u8 - 95;
+            }
         }
 
         0

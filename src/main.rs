@@ -3,6 +3,7 @@ use std::{fs::File, io::Write};
 
 mod formatter;
 mod parser;
+mod tests;
 mod utils;
 
 /// Transpile bytecode into huff
@@ -28,7 +29,6 @@ fn main() {
     };
 
     let parsed = parser::parse(bytecode);
-    // dbg!(&parsed);
 
     let huff = formatter::to_huff(parsed);
 

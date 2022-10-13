@@ -1,20 +1,21 @@
 pub use revm::OpCode as ROpCode;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct OpCode(pub Option<ROpCode>);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Byte {
     Hex(String),
     Op(OpCode),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct SourceByte {
     pub byte: Vec<Byte>,
     pub pc: u32,
 }
 
+// TODO: those methods should not unwrap the opcode
 impl OpCode {
     pub fn is_push(&self) -> bool {
         if let Some(op) = self.0 {

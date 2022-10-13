@@ -1,10 +1,10 @@
-use crate::utils::{Byte, SourceByte};
+use crate::{parser::Parsed, utils::Byte};
 // use revm::opcode::JUMPDEST;
 
-pub fn to_huff(parsed: Vec<SourceByte>) -> String {
+pub fn to_huff(parsed: Parsed) -> String {
     let mut huff = String::from("#define macro MAIN() = takes(0) returns(0) {");
 
-    parsed.iter().for_each(|chunk| {
+    parsed.sb.iter().for_each(|chunk| {
         huff.push_str("\n\u{20}\u{20}");
 
         let byte = &chunk.byte;
@@ -34,7 +34,33 @@ pub fn to_huff(parsed: Vec<SourceByte>) -> String {
                 }
                 Byte::Op(o) => {
                     let op = match o.0 {
-                        Some(oc) => oc.as_str().to_ascii_lowercase(),
+                        Some(oc) => match oc.u8() {
+                            revm::opcode::JUMP => {
+                                if let Some(dest) = parsed.jt.jump.get(&chunk.pc) {
+                                    if parsed.jt.jumpdest.get(dest).is_some() {
+                                        let mut out = String::from("jump_");
+                                        out.push_str(&dest.to_string());
+
+                                        out
+                                    } else {
+                                        String::from("jump_?")
+                                    }
+                                } else {
+                                    oc.as_str().to_ascii_lowercase()
+                                }
+                            }
+                            revm::opcode::JUMPDEST => {
+                                if parsed.jt.jumpdest.get(&chunk.pc).is_some() {
+                                    let mut out = String::from("jumpdest_");
+                                    out.push_str(&chunk.pc.to_string());
+
+                                    out
+                                } else {
+                                    oc.as_str().to_ascii_lowercase()
+                                }
+                            }
+                            _ => oc.as_str().to_ascii_lowercase(),
+                        },
                         None => String::from("invalid"),
                     };
                     huff.push_str(&op);

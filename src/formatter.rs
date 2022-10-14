@@ -65,6 +65,7 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
                                 };
 
                                 if let Some(dest) = parsed.jt.jump.get(&chunk.pc) {
+                                    // if current pc has a parsed dest
                                     if let Some(..) = parsed.sb.get(i - 1) {
                                         if parsed.jt.jumpdest.get(dest).is_some() {
                                             // let mut out = String::from("jump_");
@@ -79,7 +80,8 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
                                             out
                                         }
                                     } else {
-                                        oc.as_str().to_ascii_lowercase()
+                                        // oc.as_str().to_ascii_lowercase()
+                                        unreachable!("Jump without dest at pc {}", &chunk.pc);
                                     }
                                 } else {
                                     // panic!("{} without location at pc {}", jump_type, chunk.pc);

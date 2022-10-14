@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::utils::{Byte, OpCode, ROpCode, SourceByte};
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq, Eq)]
 pub struct JumpTable {
     pub jumpdest: HashSet<u32>,
     /// pc => dest
@@ -21,7 +21,7 @@ pub fn parse(bytecode: String) -> Parsed {
     let mut parsed: Vec<SourceByte> = Vec::new();
 
     let mut push_index: u32 = 0;
-    let mut pc: u32 = 1;
+    let mut pc: u32 = 0;
 
     let mut jump_table = JumpTable::default();
 
@@ -60,7 +60,7 @@ pub fn parse(bytecode: String) -> Parsed {
                     if unfinished {
                         ret.append(&mut vec![Byte::Hex(String::from("<UNFINISHED_PUSH>"))]);
                     }
-                    pc += size as u32;
+                    pc += size as u32 + 1;
                 } else {
                     // non PUSH instructions
                     let op_val = opcode.0.unwrap().u8();

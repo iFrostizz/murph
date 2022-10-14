@@ -74,7 +74,7 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
                                             out
                                         } else {
                                             let mut out = jump_type;
-                                            out.push_str(&format!("_<{}>", chunk.pc));
+                                            out.push_str(&format!("_<{}>", dest));
 
                                             out
                                         }

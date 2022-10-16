@@ -8,6 +8,10 @@ into this:
 
 ![murph output](images/output.png)
 
+## Installation
+
+`cargo install --git https://github.com/iFrostizz/murph.git`
+
 ## TODO:
 
 - [ ] Writing more tests

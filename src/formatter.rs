@@ -137,10 +137,10 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
     huff
 }
 
-fn get_jump_type(op: u8) -> Option<String> {
+/*fn get_jump_type(op: u8) -> Option<String> {
     match op {
         opcode::JUMP => Some(String::from("jump")),
         opcode::JUMPI => Some(String::from("jumpi")),
         _ => None,
     }
-}
+}*/

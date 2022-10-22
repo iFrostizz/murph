@@ -17,6 +17,6 @@ into this:
 - [ ] Writing more tests
 - [ ] Breaking big chunks into small functions
 - [x] Make JUMP / JUMPI pc fetch more smart
-- [ ] Ignore init code
+- [x] Ignore init code
 - [ ] Input from file
 - [ ] Generate stack annotations in comment

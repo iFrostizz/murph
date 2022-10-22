@@ -3,13 +3,26 @@ use std::collections::{HashMap, HashSet};
 
 use crate::utils::{Byte, OpCode, ROpCode, SourceByte};
 
+#[derive(PartialEq, Eq, Debug, Hash)]
+pub enum JumpType {
+    JUMP,
+    JUMPI,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash)]
+pub struct JumpPack {
+    pub jump_type: JumpType,
+    pub pc: u32,
+}
+
 #[derive(Default, Debug, PartialEq, Eq)]
 pub struct JumpTable {
     pub jumpdest: HashSet<u32>,
     /// pc => dest
-    pub jump: HashMap<u32, u32>,
+    pub jump: HashMap<u32, JumpPack>,
 }
 
+#[derive(Debug)]
 pub struct Parsed {
     pub sb: Vec<SourceByte>,
     pub jt: JumpTable,
@@ -20,7 +33,6 @@ pub fn parse(bytecode: String, strip: bool) -> Parsed {
 
     if strip {
         // strip until we meet RETURN
-        // let index = code.iter().enumerate().onceI//
 
         let mut i: usize = 0;
 
@@ -107,7 +119,17 @@ pub fn parse(bytecode: String, strip: bool) -> Parsed {
                                         })
                                         .collect::<String>();
                                     let dest = u32::from_str_radix(&hex, 16).unwrap();
-                                    jump_table.jump.insert(pc, dest);
+                                    jump_table.jump.insert(
+                                        pc,
+                                        JumpPack {
+                                            pc: dest,
+                                            jump_type: if op_val == JUMP {
+                                                JumpType::JUMP
+                                            } else {
+                                                JumpType::JUMPI
+                                            },
+                                        },
+                                    );
                                 }
                             }
                         }

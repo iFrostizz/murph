@@ -1,0 +1,8 @@
+#define macro MAIN() = takes(0) returns(0) {
+  0x00 calldataload      // [sel]
+  0x00 eq yes jumpi      // []
+  0x00 0x00 revert       // []
+
+  yes:                   // []
+    stop                 // []
+}

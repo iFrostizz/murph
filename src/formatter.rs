@@ -58,24 +58,24 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
                     let op = match o.0 {
                         Some(oc) => match oc.u8() {
                             opcode::JUMP | opcode::JUMPI => {
-                                let jump_type = if oc.u8() == opcode::JUMP {
-                                    String::from("jump")
-                                } else {
-                                    String::from("jumpi")
-                                };
+                                // let jump_type = get_jump_type(oc.u8()).unwrap();
+                                // TODO: should be label then jump / jumpi
+                                let jump_type = String::from("jump");
 
                                 if let Some(dest) = parsed.jt.jump.get(&chunk.pc) {
                                     // if current pc has a parsed dest
                                     if let Some(..) = parsed.sb.get(i - 1) {
-                                        if parsed.jt.jumpdest.get(dest).is_some() {
+                                        if parsed.jt.jumpdest.get(&dest.pc).is_some() {
                                             // let mut out = String::from("jump_");
                                             let mut out = jump_type;
-                                            out.push_str(&format!("_{}", dest));
+                                            out.push_str(&format!("_{}\n\u{20}\u{20}", dest.pc));
+                                            out.push_str(&oc.as_str().to_ascii_lowercase());
 
                                             out
                                         } else {
                                             let mut out = jump_type;
-                                            out.push_str(&format!("_<{}>", dest));
+                                            out.push_str(&format!("_<{}>\n\u{20}\u{20}", dest.pc));
+                                            out.push_str(&oc.as_str().to_ascii_lowercase());
 
                                             out
                                         }
@@ -95,7 +95,19 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
                             }
                             opcode::JUMPDEST => {
                                 if parsed.jt.jumpdest.get(&chunk.pc).is_some() {
-                                    let mut out = String::from("jumpdest_");
+                                    // find all jumps going to this location
+                                    /* let jump_locs = parsed
+                                    .jt
+                                    .jump
+                                    .values()
+                                    .map(|dest| dest.pc)
+                                    .filter(|pc| *pc == chunk.pc)
+                                    .collect::<Vec<u32>>();*/
+                                    // let mut out = get_jump_type(10).unwrap();
+                                    // let mut out = String::from("jumpdest_");
+
+                                    let mut out = String::from("jump_");
+
                                     out.push_str(&format!("{}:", chunk.pc));
 
                                     out
@@ -123,4 +135,12 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
     huff.push_str("\n}");
 
     huff
+}
+
+fn get_jump_type(op: u8) -> Option<String> {
+    match op {
+        opcode::JUMP => Some(String::from("jump")),
+        opcode::JUMPI => Some(String::from("jumpi")),
+        _ => None,
+    }
 }

@@ -3,7 +3,7 @@ mod parser_test {
     use std::collections::{HashMap, HashSet};
 
     use crate::{
-        parser::{self, JumpTable},
+        parser::{self, JumpPack, JumpTable, JumpType},
         utils::{Byte, OpCode, ROpCode, SourceByte},
     };
     use revm::opcode;
@@ -11,7 +11,7 @@ mod parser_test {
     #[test]
     fn test_parse_add() {
         let code = String::from("61010201");
-        let parsed = parser::parse(code).sb;
+        let parsed = parser::parse(code, false).sb;
 
         assert_eq!(
             parsed,
@@ -35,7 +35,7 @@ mod parser_test {
     #[test]
     fn test_invalid_push() {
         let code = String::from("6100");
-        let parsed = parser::parse(code).sb;
+        let parsed = parser::parse(code, false).sb;
 
         assert_eq!(
             parsed,
@@ -53,7 +53,7 @@ mod parser_test {
     #[test]
     fn test_jump_location() {
         let code = String::from("6003565B");
-        let out = parser::parse(code);
+        let out = parser::parse(code, false);
         let (parsed, jump_table) = (out.sb, out.jt);
 
         assert_eq!(
@@ -80,7 +80,13 @@ mod parser_test {
         assert_eq!(
             jump_table,
             JumpTable {
-                jump: HashMap::from([(2, 3)]),
+                jump: HashMap::from([(
+                    2,
+                    JumpPack {
+                        pc: 3,
+                        jump_type: JumpType::JUMP
+                    }
+                )]),
                 jumpdest: HashSet::from([3])
             }
         );
@@ -89,7 +95,7 @@ mod parser_test {
     #[test]
     fn test_jumpi_location() {
         let code = String::from("632222222214601C575B");
-        let out = parser::parse(code);
+        let out = parser::parse(code, false);
         let (parsed, jump_table) = (out.sb, out.jt);
 
         assert_eq!(
@@ -131,7 +137,13 @@ mod parser_test {
             jump_table,
             JumpTable {
                 // loc => to
-                jump: HashMap::from([(8, 28)]),
+                jump: HashMap::from([(
+                    8,
+                    JumpPack {
+                        pc: 28,
+                        jump_type: JumpType::JUMPI
+                    }
+                )]),
                 // loc
                 jumpdest: HashSet::from([(9)]),
             }
@@ -141,7 +153,7 @@ mod parser_test {
     #[test]
     fn test_simple_store() {
         let code = String::from("60003560e01c8063552410771461001c5780632096525514610023575b6004356000555b60005460005260206000f3");
-        let out = parser::parse(code);
+        let out = parser::parse(code, false);
         let (parsed, jump_table) = (out.sb, out.jt);
 
         assert_eq!(
@@ -305,7 +317,22 @@ mod parser_test {
         assert_eq!(
             jump_table,
             JumpTable {
-                jump: HashMap::from([(16, 28), (27, 35)]),
+                jump: HashMap::from([
+                    (
+                        16,
+                        JumpPack {
+                            pc: 28,
+                            jump_type: JumpType::JUMPI
+                        }
+                    ),
+                    (
+                        27,
+                        JumpPack {
+                            pc: 35,
+                            jump_type: JumpType::JUMPI
+                        }
+                    )
+                ]),
                 jumpdest: HashSet::from([28, 35])
             }
         )

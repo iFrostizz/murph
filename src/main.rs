@@ -16,6 +16,10 @@ struct Args {
 
     #[clap(short, long)]
     file: Option<String>,
+
+    /// Strip the creation code ?
+    #[clap(short, long, default_value_t = false)]
+    strip: bool,
 }
 
 fn main() {
@@ -28,7 +32,7 @@ fn main() {
         bytecode
     };
 
-    let mut parsed = parser::parse(bytecode);
+    let mut parsed = parser::parse(bytecode, args.strip);
 
     let huff = formatter::to_huff(&mut parsed);
 

@@ -1,4 +1,4 @@
-use revm::opcode::{JUMP, JUMPDEST, JUMPI};
+use revm::opcode::{JUMP, JUMPDEST, JUMPI, RETURN};
 use std::collections::{HashMap, HashSet};
 
 use crate::utils::{Byte, OpCode, ROpCode, SourceByte};
@@ -15,8 +15,29 @@ pub struct Parsed {
     pub jt: JumpTable,
 }
 
-pub fn parse(bytecode: String) -> Parsed {
-    let code = hex::decode(bytecode).unwrap();
+pub fn parse(bytecode: String, strip: bool) -> Parsed {
+    let mut code = hex::decode(bytecode).unwrap();
+
+    if strip {
+        // strip until we meet RETURN
+        // let index = code.iter().enumerate().onceI//
+
+        let mut i: usize = 0;
+
+        let index = loop {
+            if i < code.len() {
+                let v = code[i];
+                if v == RETURN {
+                    break i;
+                }
+                i += 1;
+            } else {
+                panic!("Expect to find RETURN opcode in creation code")
+            };
+        };
+
+        code.drain(..index + 1);
+    }
 
     let mut parsed: Vec<SourceByte> = Vec::new();
 

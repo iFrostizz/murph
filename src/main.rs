@@ -1,7 +1,12 @@
+#![feature(once_cell)]
+
 use clap::Parser;
+use once_cell::sync::OnceCell;
+use opcodes::{ExpOpCode, OPCODE_JUMPMAP};
 use std::{fs::File, io::Write};
 
 mod formatter;
+mod opcodes;
 mod parser;
 mod tests;
 mod utils;
@@ -32,7 +37,29 @@ fn main() {
         bytecode
     };
 
-    let mut parsed = parser::parse(bytecode, args.strip);
+    let exps = vec![
+        ExpOpCode {
+            hex: 0xb3,
+            str: "tload",
+        },
+        ExpOpCode {
+            hex: 0xb4,
+            str: "tstore",
+        },
+    ];
+
+    /*let mut opcode_jumpmap = OPCODE_JUMPMAP;
+
+    exps.iter()
+        .for_each(|exp| opcode_jumpmap[exp.hex as usize] = Some(exp.str));*/
+
+    /*let mut final_exps = OPCODE_JUMPMAP.get_mut().unwrap();
+    exps.iter()
+        .for_each(|exp| final_exps[exp.hex as usize] = Some(exp.str));*/
+
+    // let CELL: OnceCell<[Option<&'static str>; 256]> = OnceCell::with_value(final_exps);
+
+    let mut parsed = parser::parse(bytecode, args.strip /*, exps*/);
 
     let huff = formatter::to_huff(&mut parsed);
 

@@ -1,7 +1,10 @@
 use revm::opcode::{JUMP, JUMPDEST, JUMPI, RETURN};
 use std::collections::{HashMap, HashSet};
 
-use crate::utils::{Byte, OpCode, ROpCode, SourceByte};
+use crate::{
+    opcodes::OpCode,
+    utils::{Byte, SourceByte},
+};
 
 #[derive(PartialEq, Eq, Debug, Hash)]
 pub enum JumpType {
@@ -28,7 +31,7 @@ pub struct Parsed {
     pub jt: JumpTable,
 }
 
-pub fn parse(bytecode: String, strip: bool) -> Parsed {
+pub fn parse<'a>(bytecode: String, strip: bool /*, opcode_jumpmap: Vec<&'a str>*/) -> Parsed {
     let mut code = hex::decode(bytecode).unwrap();
 
     if strip {
@@ -44,7 +47,7 @@ pub fn parse(bytecode: String, strip: bool) -> Parsed {
                 }
                 i += 1;
             } else {
-                panic!("Expect to find RETURN opcode in creation code")
+                panic!("Expected to find RETURN opcode in creation code")
             };
         };
 
@@ -62,15 +65,15 @@ pub fn parse(bytecode: String, strip: bool) -> Parsed {
         let bpc = pc;
 
         if i as u32 >= push_index {
-            let op = ROpCode::try_from_u8(*b);
+            let op = OpCode::new(*b);
 
-            let code_part: SourceByte = if let Some(_opcode) = op {
-                let opcode = OpCode(op);
-                let mut ret = vec![Byte::Op(opcode)];
+            let code_part: SourceByte = if op.is_valid() {
+                // let opcode = OpCode(op);
+                let mut ret = vec![Byte::Op(op)];
 
-                if opcode.is_push() {
+                if op.is_push() {
                     // then next nibbles are hex
-                    let size = opcode.push_size();
+                    let size = op.push_size();
                     push_index = push_index + size as u32 + 1;
 
                     let mut range = (i + 1)..=(i + size as usize);
@@ -96,7 +99,7 @@ pub fn parse(bytecode: String, strip: bool) -> Parsed {
                     pc += size as u32 + 1;
                 } else {
                     // non PUSH instructions
-                    let op_val = opcode.0.unwrap().u8();
+                    let op_val = op.0;
 
                     if op_val == JUMPDEST {
                         jump_table.jumpdest.insert(pc);
@@ -143,12 +146,12 @@ pub fn parse(bytecode: String, strip: bool) -> Parsed {
             } else {
                 // is ending a PUSH
                 push_index += 1;
-                let opcode = ROpCode::try_from_u8(*b);
+                let opcode = OpCode::new(*b);
 
                 pc += 1;
 
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(opcode))],
+                    byte: vec![Byte::Op(opcode)],
                     pc: bpc,
                 }
             };

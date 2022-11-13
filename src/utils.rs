@@ -1,7 +1,4 @@
-pub use revm::OpCode as ROpCode;
-
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub struct OpCode(pub Option<ROpCode>);
+use crate::opcodes::OpCode;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Byte {
@@ -18,22 +15,12 @@ pub struct SourceByte {
 // TODO: those methods should not unwrap the opcode
 impl OpCode {
     pub fn is_push(&self) -> bool {
-        if let Some(op) = self.0 {
-            let as_u8 = op.u8();
-
-            (96..128).contains(&as_u8)
-        } else {
-            false
-        }
+        (96..128).contains(&self.0)
     }
 
     pub fn push_size(&self) -> u8 {
-        if let Some(op) = self.0 {
-            let as_u8 = op.u8();
-
-            if (96..128).contains(&as_u8) {
-                return as_u8 - 95;
-            }
+        if (96..128).contains(&self.0) {
+            return self.0 - 95;
         }
 
         0

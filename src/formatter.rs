@@ -25,17 +25,17 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
             // If next is a push, don't push to huff
             if let Some(c) = parsed.sb.get(i + 1) {
                 if let Byte::Op(op) = c.byte.get(0).unwrap() {
-                    if let Some(in_op) = op.0 {
-                        match in_op.u8() {
-                            opcode::JUMP | opcode::JUMPI => (),
-                            _ => {
-                                huff.push_str("\n\u{20}\u{20}");
-                                huff.push_str(&full_hex);
-                            }
+                    match op.0 {
+                        opcode::JUMP | opcode::JUMPI => (),
+                        _ => {
+                            huff.push_str("\n\u{20}\u{20}");
+                            huff.push_str(&full_hex);
                         }
-                    } else {
-                        huff.push_str("\n\u{20}\u{20}");
-                        huff.push_str(&full_hex);
+                        opcode::JUMP | opcode::JUMPI => (),
+                        _ => {
+                            huff.push_str("\n\u{20}\u{20}");
+                            huff.push_str(&full_hex);
+                        }
                     }
                 } else {
                     huff.push_str("\n\u{20}\u{20}");
@@ -55,7 +55,59 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
                     unreachable!("Having a hex without push: {}", h);
                 }
                 Byte::Op(o) => {
-                    let op = match o.0 {
+                    // Can be valid or invalid but has to be an opcode
+                    let op = if o.is_valid() {
+                        match o.0 {
+                            opcode::JUMP | opcode::JUMPI => {
+                                // let jump_type = get_jump_type(oc.u8()).unwrap();
+                                // TODO: should be label then jump / jumpi
+                                let jump_type = String::from("jump");
+
+                                if let Some(dest) = parsed.jt.jump.get(&chunk.pc) {
+                                    // if current pc has a parsed dest
+                                    if let Some(..) = parsed.sb.get(i - 1) {
+                                        if parsed.jt.jumpdest.get(&dest.pc).is_some() {
+                                            let mut out = jump_type;
+                                            out.push_str(&format!("_{}\n\u{20}\u{20}", dest.pc));
+                                            out.push_str(&o.as_str().to_ascii_lowercase());
+
+                                            out
+                                        } else {
+                                            let mut out = jump_type;
+                                            out.push_str(&format!("_<{}>\n\u{20}\u{20}", dest.pc));
+                                            out.push_str(&o.as_str().to_ascii_lowercase());
+
+                                            out
+                                        }
+                                    } else {
+                                        unreachable!("Jump without dest at pc {}", &chunk.pc);
+                                    }
+                                } else {
+                                    let mut out = jump_type;
+                                    out.push_str(&format!("_<!{}>", chunk.pc));
+
+                                    out
+                                }
+                            }
+                            opcode::JUMPDEST => {
+                                if parsed.jt.jumpdest.get(&chunk.pc).is_some() {
+                                    let mut out = String::from("jump_");
+
+                                    out.push_str(&format!("{}:", chunk.pc));
+
+                                    out
+                                } else {
+                                    o.as_str().to_ascii_lowercase()
+                                }
+                            }
+                            _ => o.as_str().to_ascii_lowercase(),
+                        }
+                    } else {
+                        let mut inv = String::from("invalid");
+                        inv.push_str(&format!("_{:x}", o.0));
+                        inv
+                    };
+                    /*let op = match o.0 {
                         Some(oc) => match oc.u8() {
                             opcode::JUMP | opcode::JUMPI => {
                                 // let jump_type = get_jump_type(oc.u8()).unwrap();
@@ -125,7 +177,7 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
 
                             String::from("invalid")
                         }
-                    };
+                    };*/
                     huff.push_str(&op);
                 }
             };

@@ -1,5 +1,8 @@
-use crate::{parser::Parsed, utils::Byte};
-use revm::opcode;
+use crate::{
+    opcodes::{JUMP, JUMPDEST, JUMPI},
+    parser::Parsed,
+    utils::Byte,
+};
 
 pub fn to_huff(parsed: &mut Parsed) -> String {
     let mut huff = String::from("#define macro MAIN() = takes(0) returns(0) {");
@@ -26,12 +29,7 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
             if let Some(c) = parsed.sb.get(i + 1) {
                 if let Byte::Op(op) = c.byte.get(0).unwrap() {
                     match op.0 {
-                        opcode::JUMP | opcode::JUMPI => (),
-                        _ => {
-                            huff.push_str("\n\u{20}\u{20}");
-                            huff.push_str(&full_hex);
-                        }
-                        opcode::JUMP | opcode::JUMPI => (),
+                        JUMP | JUMPI => (),
                         _ => {
                             huff.push_str("\n\u{20}\u{20}");
                             huff.push_str(&full_hex);
@@ -58,7 +56,7 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
                     // Can be valid or invalid but has to be an opcode
                     let op = if o.is_valid() {
                         match o.0 {
-                            opcode::JUMP | opcode::JUMPI => {
+                            JUMP | JUMPI => {
                                 // let jump_type = get_jump_type(oc.u8()).unwrap();
                                 // TODO: should be label then jump / jumpi
                                 let jump_type = String::from("jump");
@@ -89,7 +87,7 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
                                     out
                                 }
                             }
-                            opcode::JUMPDEST => {
+                            JUMPDEST => {
                                 if parsed.jt.jumpdest.get(&chunk.pc).is_some() {
                                     let mut out = String::from("jump_");
 

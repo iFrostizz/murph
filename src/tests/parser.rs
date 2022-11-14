@@ -2,14 +2,25 @@
 mod parser_test {
     use std::collections::{HashMap, HashSet};
 
+    use revm::opcode::RETURNDATASIZE;
+
     use crate::{
+        opcodes::{
+            OpCode, ADD, CALLDATALOAD, DUP1, EQ, EXP_OPCODE_JUMPMAP, JUMP, JUMPDEST, JUMPI, MSTORE,
+            OPCODE_JUMPMAP, PUSH1, PUSH2, PUSH4, RETURN, SHR, SLOAD, SSTORE,
+        },
         parser::{self, JumpPack, JumpTable, JumpType},
-        utils::{Byte, OpCode, ROpCode, SourceByte},
+        utils::{Byte, SourceByte},
     };
-    use revm::opcode;
+
+    fn init_opcode_jumpmap() {
+        EXP_OPCODE_JUMPMAP.get_or_init(|| OPCODE_JUMPMAP);
+    }
 
     #[test]
     fn test_parse_add() {
+        init_opcode_jumpmap();
+
         let code = String::from("61010201");
         let parsed = parser::parse(code, false).sb;
 
@@ -18,14 +29,14 @@ mod parser_test {
             vec![
                 SourceByte {
                     byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH2))),
+                        Byte::Op(OpCode::new(PUSH2)),
                         Byte::Hex(String::from("01")),
                         Byte::Hex(String::from("02"))
                     ],
                     pc: 0
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::ADD)))],
+                    byte: vec![Byte::Op(OpCode::new(ADD))],
                     pc: 3
                 },
             ]
@@ -34,6 +45,8 @@ mod parser_test {
 
     #[test]
     fn test_invalid_push() {
+        init_opcode_jumpmap();
+
         let code = String::from("6100");
         let parsed = parser::parse(code, false).sb;
 
@@ -41,7 +54,7 @@ mod parser_test {
             parsed,
             vec![SourceByte {
                 byte: vec![
-                    Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH2))),
+                    Byte::Op(OpCode::new(PUSH2)),
                     Byte::Hex(String::from("00")),
                     Byte::Hex(String::from("<UNFINISHED_PUSH>"))
                 ],
@@ -52,6 +65,8 @@ mod parser_test {
 
     #[test]
     fn test_jump_location() {
+        init_opcode_jumpmap();
+
         let code = String::from("6003565B");
         let out = parser::parse(code, false);
         let (parsed, jump_table) = (out.sb, out.jt);
@@ -60,18 +75,15 @@ mod parser_test {
             parsed,
             vec![
                 SourceByte {
-                    byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH1))),
-                        Byte::Hex(String::from("03")),
-                    ],
+                    byte: vec![Byte::Op(OpCode::new(PUSH1)), Byte::Hex(String::from("03")),],
                     pc: 0
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::JUMP)))],
+                    byte: vec![Byte::Op(OpCode::new(JUMP))],
                     pc: 2
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::JUMPDEST)))],
+                    byte: vec![Byte::Op(OpCode::new(JUMPDEST))],
                     pc: 3
                 }
             ]
@@ -94,6 +106,8 @@ mod parser_test {
 
     #[test]
     fn test_jumpi_location() {
+        init_opcode_jumpmap();
+
         let code = String::from("632222222214601C575B");
         let out = parser::parse(code, false);
         let (parsed, jump_table) = (out.sb, out.jt);
@@ -103,7 +117,7 @@ mod parser_test {
             vec![
                 SourceByte {
                     byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH4))),
+                        Byte::Op(OpCode::new(PUSH4)),
                         Byte::Hex(String::from("22")),
                         Byte::Hex(String::from("22")),
                         Byte::Hex(String::from("22")),
@@ -112,22 +126,19 @@ mod parser_test {
                     pc: 0
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::EQ)))],
+                    byte: vec![Byte::Op(OpCode::new(EQ))],
                     pc: 5
                 },
                 SourceByte {
-                    byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH1))),
-                        Byte::Hex(String::from("1c"))
-                    ],
+                    byte: vec![Byte::Op(OpCode::new(PUSH1)), Byte::Hex(String::from("1c"))],
                     pc: 6
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::JUMPI)))],
+                    byte: vec![Byte::Op(OpCode::new(JUMPI))],
                     pc: 8
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::JUMPDEST)))],
+                    byte: vec![Byte::Op(OpCode::new(JUMPDEST))],
                     pc: 9
                 },
             ]
@@ -152,6 +163,8 @@ mod parser_test {
 
     #[test]
     fn test_simple_store() {
+        init_opcode_jumpmap();
+
         let code = String::from("60003560e01c8063552410771461001c5780632096525514610023575b6004356000555b60005460005260206000f3");
         let out = parser::parse(code, false);
         let (parsed, jump_table) = (out.sb, out.jt);
@@ -160,34 +173,28 @@ mod parser_test {
             parsed,
             vec![
                 SourceByte {
-                    byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH1))),
-                        Byte::Hex(String::from("00")),
-                    ],
+                    byte: vec![Byte::Op(OpCode::new(PUSH1)), Byte::Hex(String::from("00")),],
                     pc: 0
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::CALLDATALOAD)))],
+                    byte: vec![Byte::Op(OpCode::new(CALLDATALOAD))],
                     pc: 2
                 },
                 SourceByte {
-                    byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH1))),
-                        Byte::Hex(String::from("e0")),
-                    ],
+                    byte: vec![Byte::Op(OpCode::new(PUSH1)), Byte::Hex(String::from("e0")),],
                     pc: 3
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::SHR)))],
+                    byte: vec![Byte::Op(OpCode::new(SHR))],
                     pc: 5
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::DUP1)))],
+                    byte: vec![Byte::Op(OpCode::new(DUP1))],
                     pc: 6
                 },
                 SourceByte {
                     byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH4))),
+                        Byte::Op(OpCode::new(PUSH4)),
                         Byte::Hex(String::from("55")),
                         Byte::Hex(String::from("24")),
                         Byte::Hex(String::from("10")),
@@ -196,28 +203,28 @@ mod parser_test {
                     pc: 7
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::EQ)))],
+                    byte: vec![Byte::Op(OpCode::new(EQ))],
                     pc: 12
                 },
                 SourceByte {
                     byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH2))),
+                        Byte::Op(OpCode::new(PUSH2)),
                         Byte::Hex(String::from("00")),
                         Byte::Hex(String::from("1c")),
                     ],
                     pc: 13
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::JUMPI)))],
+                    byte: vec![Byte::Op(OpCode::new(JUMPI))],
                     pc: 16
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::DUP1)))],
+                    byte: vec![Byte::Op(OpCode::new(DUP1))],
                     pc: 17
                 },
                 SourceByte {
                     byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH4))),
+                        Byte::Op(OpCode::new(PUSH4)),
                         Byte::Hex(String::from("20")),
                         Byte::Hex(String::from("96")),
                         Byte::Hex(String::from("52")),
@@ -226,89 +233,71 @@ mod parser_test {
                     pc: 18
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::EQ)))],
+                    byte: vec![Byte::Op(OpCode::new(EQ))],
                     pc: 23
                 },
                 SourceByte {
                     byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH2))),
+                        Byte::Op(OpCode::new(PUSH2)),
                         Byte::Hex(String::from("00")),
                         Byte::Hex(String::from("23")),
                     ],
                     pc: 24
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::JUMPI)))],
+                    byte: vec![Byte::Op(OpCode::new(JUMPI))],
                     pc: 27
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::JUMPDEST)))],
+                    byte: vec![Byte::Op(OpCode::new(JUMPDEST))],
                     pc: 28
                 },
                 SourceByte {
-                    byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH1))),
-                        Byte::Hex(String::from("04")),
-                    ],
+                    byte: vec![Byte::Op(OpCode::new(PUSH1)), Byte::Hex(String::from("04")),],
                     pc: 29
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::CALLDATALOAD)))],
+                    byte: vec![Byte::Op(OpCode::new(CALLDATALOAD))],
                     pc: 31
                 },
                 SourceByte {
-                    byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH1))),
-                        Byte::Hex(String::from("00")),
-                    ],
+                    byte: vec![Byte::Op(OpCode::new(PUSH1)), Byte::Hex(String::from("00")),],
                     pc: 32
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::SSTORE)))],
+                    byte: vec![Byte::Op(OpCode::new(SSTORE))],
                     pc: 34
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::JUMPDEST)))],
+                    byte: vec![Byte::Op(OpCode::new(JUMPDEST))],
                     pc: 35
                 },
                 SourceByte {
-                    byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH1))),
-                        Byte::Hex(String::from("00")),
-                    ],
+                    byte: vec![Byte::Op(OpCode::new(PUSH1)), Byte::Hex(String::from("00")),],
                     pc: 36
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::SLOAD)))],
+                    byte: vec![Byte::Op(OpCode::new(SLOAD))],
                     pc: 38
                 },
                 SourceByte {
-                    byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH1))),
-                        Byte::Hex(String::from("00")),
-                    ],
+                    byte: vec![Byte::Op(OpCode::new(PUSH1)), Byte::Hex(String::from("00")),],
                     pc: 39
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::MSTORE)))],
+                    byte: vec![Byte::Op(OpCode::new(MSTORE))],
                     pc: 41
                 },
                 SourceByte {
-                    byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH1))),
-                        Byte::Hex(String::from("20")),
-                    ],
+                    byte: vec![Byte::Op(OpCode::new(PUSH1)), Byte::Hex(String::from("20")),],
                     pc: 42
                 },
                 SourceByte {
-                    byte: vec![
-                        Byte::Op(OpCode(ROpCode::try_from_u8(opcode::PUSH1))),
-                        Byte::Hex(String::from("00")),
-                    ],
+                    byte: vec![Byte::Op(OpCode::new(PUSH1)), Byte::Hex(String::from("00")),],
                     pc: 44
                 },
                 SourceByte {
-                    byte: vec![Byte::Op(OpCode(ROpCode::try_from_u8(opcode::RETURN)))],
+                    byte: vec![Byte::Op(OpCode::new(RETURN))],
                     pc: 46
                 },
             ]
@@ -336,5 +325,46 @@ mod parser_test {
                 jumpdest: HashSet::from([28, 35])
             }
         )
+    }
+
+    #[test]
+    fn test_exp_opcodes() {
+        let mut base_jumpmap = OPCODE_JUMPMAP;
+        base_jumpmap[0xb3_usize] = Some("tload");
+        base_jumpmap[0xb4_usize] = Some("tstore");
+        EXP_OPCODE_JUMPMAP.get_or_init(|| base_jumpmap);
+
+        const TLOAD: u8 = 0xb3;
+        const TSTORE: u8 = 0xb4;
+
+        let code = String::from("60ff6000b43db3");
+        let out = parser::parse(code, false);
+        let parsed = out.sb;
+
+        assert_eq!(
+            parsed,
+            vec![
+                SourceByte {
+                    byte: vec![Byte::Op(OpCode::new(PUSH1)), Byte::Hex(String::from("ff")),],
+                    pc: 0
+                },
+                SourceByte {
+                    byte: vec![Byte::Op(OpCode::new(PUSH1)), Byte::Hex(String::from("00")),],
+                    pc: 2
+                },
+                SourceByte {
+                    byte: vec![Byte::Op(OpCode::new(TSTORE))],
+                    pc: 4
+                },
+                SourceByte {
+                    byte: vec![Byte::Op(OpCode::new(RETURNDATASIZE))],
+                    pc: 5
+                },
+                SourceByte {
+                    byte: vec![Byte::Op(OpCode::new(TLOAD))],
+                    pc: 6
+                },
+            ]
+        );
     }
 }

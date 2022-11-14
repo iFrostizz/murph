@@ -1,8 +1,7 @@
 #![feature(once_cell)]
 
 use clap::Parser;
-use once_cell::sync::OnceCell;
-use opcodes::{ExpOpCode, OPCODE_JUMPMAP};
+use opcodes::{ExpOpCode, EXP_OPCODE_JUMPMAP, OPCODE_JUMPMAP};
 use std::{fs::File, io::Write};
 
 mod formatter;
@@ -48,10 +47,12 @@ fn main() {
         },
     ];
 
-    /*let mut opcode_jumpmap = OPCODE_JUMPMAP;
+    let mut opcode_jumpmap = OPCODE_JUMPMAP;
 
     exps.iter()
-        .for_each(|exp| opcode_jumpmap[exp.hex as usize] = Some(exp.str));*/
+        .for_each(|exp| opcode_jumpmap[exp.hex as usize] = Some(exp.str));
+
+    EXP_OPCODE_JUMPMAP.set(opcode_jumpmap).unwrap();
 
     /*let mut final_exps = OPCODE_JUMPMAP.get_mut().unwrap();
     exps.iter()

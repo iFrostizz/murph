@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod e2e_test {
-    use std::path::{Path, PathBuf};
+    use std::path::Path;
     use std::process::Command;
     use std::{
         fs::File,
@@ -42,7 +42,7 @@ mod e2e_test {
     }
 
     fn get_bytecode_from_path(path: &str) -> String {
-        let output = Command::new("huffc").args(&[path, "-r"]).output().unwrap();
+        let output = Command::new("huffc").args([path, "-r"]).output().unwrap();
         if !output.stderr.is_empty() {
             panic!("{:?}", String::from_utf8_lossy(&output.stderr));
         }

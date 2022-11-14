@@ -24,6 +24,10 @@ struct Args {
     /// Strip the creation code ?
     #[clap(short, long, default_value_t = false)]
     strip: bool,
+
+    /// Strip the creation code ?
+    #[clap(short, long, default_value_t = false)]
+    exp: bool,
 }
 
 fn main() {
@@ -36,16 +40,20 @@ fn main() {
         bytecode
     };
 
-    let exps = vec![
-        ExpOpCode {
-            hex: 0xb3,
-            str: "tload",
-        },
-        ExpOpCode {
-            hex: 0xb4,
-            str: "tstore",
-        },
-    ];
+    let exps = if args.exp {
+        vec![
+            ExpOpCode {
+                hex: 0xb3,
+                str: "tload",
+            },
+            ExpOpCode {
+                hex: 0xb4,
+                str: "tstore",
+            },
+        ]
+    } else {
+        vec![]
+    };
 
     let mut opcode_jumpmap = OPCODE_JUMPMAP;
 

@@ -16,7 +16,7 @@ You must install the nightly toolchain first in order to compile it
 
 then you can install murph like this
 
-`cargo install --git https://github.com/iFrostizz/murph.git`
+`cargo +nightly install --git https://github.com/iFrostizz/murph.git`
 
 ## TODO:
 

@@ -10,6 +10,12 @@ into this:
 
 ## Installation
 
+You must install the nightly toolchain first in order to compile it
+
+`rustup toolchain install nightly`
+
+then you can install murph like this
+
 `cargo install --git https://github.com/iFrostizz/murph.git`
 
 ## TODO:

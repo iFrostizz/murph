@@ -2,7 +2,7 @@
 
 use clap::Parser;
 use opcodes::{ExpOpCode, EXP_OPCODE_JUMPMAP, OPCODE_JUMPMAP};
-use std::{fs::File, io::Write};
+use std::{fs::File, io::Read, io::Write};
 
 mod formatter;
 mod opcodes;
@@ -16,7 +16,13 @@ mod utils;
 struct Args {
     /// Bytecode
     #[clap(short, long)]
-    bytecode: String,
+    bytecode: Option<String>,
+
+    /// Bytecode file path
+    /// Bytecode file path
+    #[clap(long, conflicts_with = "bytecode")]
+    bytecode_file: Option<std::path::PathBuf>,
+
 
     #[clap(short, long)]
     file: Option<String>,
@@ -32,12 +38,17 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    let bytecode = args.bytecode;
 
-    let bytecode = if let Some(stripped) = bytecode.strip_prefix("0x") {
-        stripped.to_string()
-    } else {
+    let bytecode = if let Some(bc) = args.bytecode {
+        bc
+    } else if let Some(file) = args.bytecode_file {
+        let mut file = File::open(file).unwrap();
+        let mut bytecode = String::new();
+        file.read_to_string(&mut bytecode).unwrap();
         bytecode
+    } else {
+        eprintln!("error: Missing bytecode argument or file path.");
+        std::process::exit(1);
     };
 
     let exps = if args.exp {
@@ -61,12 +72,6 @@ fn main() {
         .for_each(|exp| opcode_jumpmap[exp.hex as usize] = Some(exp.str));
 
     EXP_OPCODE_JUMPMAP.set(opcode_jumpmap).unwrap();
-
-    /*let mut final_exps = OPCODE_JUMPMAP.get_mut().unwrap();
-    exps.iter()
-        .for_each(|exp| final_exps[exp.hex as usize] = Some(exp.str));*/
-
-    // let CELL: OnceCell<[Option<&'static str>; 256]> = OnceCell::with_value(final_exps);
 
     let mut parsed = parser::parse(bytecode, args.strip /*, exps*/);
 

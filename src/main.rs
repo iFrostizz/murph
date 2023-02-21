@@ -19,7 +19,6 @@ struct Args {
     bytecode: Option<String>,
 
     /// Bytecode file path
-    /// Bytecode file path
     #[clap(long, conflicts_with = "bytecode")]
     bytecode_file: Option<std::path::PathBuf>,
 

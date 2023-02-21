@@ -24,5 +24,5 @@ then you can install murph like this
 - [ ] Breaking big chunks into small functions
 - [x] Make JUMP / JUMPI pc fetch more smart
 - [x] Ignore init code
-- [ ] Input from file
+- [x] Input from file
 - [ ] Generate stack annotations in comment

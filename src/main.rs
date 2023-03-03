@@ -15,11 +15,11 @@ mod utils;
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Bytecode
-    #[clap(short, long)]
+    #[clap(short, long, conflicts_with = "bytecode_file")]
     bytecode: Option<String>,
 
     /// Bytecode file path
-    #[clap(long, conflicts_with = "bytecode")]
+    #[clap(long, conflicts_with = "bytecode", alias = "bf")]
     bytecode_file: Option<std::path::PathBuf>,
 
 
@@ -44,7 +44,7 @@ fn main() {
         let mut file = File::open(file).unwrap();
         let mut bytecode = String::new();
         file.read_to_string(&mut bytecode).unwrap();
-        bytecode
+        bytecode.trim().to_string()
     } else {
         eprintln!("error: Missing bytecode argument or file path.");
         std::process::exit(1);

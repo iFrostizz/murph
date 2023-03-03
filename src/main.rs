@@ -39,16 +39,17 @@ fn main() {
     let args = Args::parse();
 
     let bytecode = if let Some(bc) = args.bytecode {
-        bc
+        bc.strip_prefix("0x").unwrap_or(&bc).to_string()
     } else if let Some(file) = args.bytecode_file {
         let mut file = File::open(file).unwrap();
         let mut bytecode = String::new();
         file.read_to_string(&mut bytecode).unwrap();
-        bytecode.trim().to_string()
+        bytecode.trim().strip_prefix("0x").unwrap_or(&bytecode.trim()).to_string()
     } else {
         eprintln!("error: Missing bytecode argument or file path.");
         std::process::exit(1);
     };
+
 
     let exps = if args.exp {
         vec![

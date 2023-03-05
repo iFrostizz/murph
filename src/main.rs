@@ -2,7 +2,7 @@
 
 use clap::Parser;
 use opcodes::{ExpOpCode, EXP_OPCODE_JUMPMAP, OPCODE_JUMPMAP};
-use std::{fs::File, io::Write};
+use std::{fs::File, io::Read, io::Write};
 
 mod formatter;
 mod opcodes;
@@ -15,8 +15,13 @@ mod utils;
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Bytecode
-    #[clap(short, long)]
-    bytecode: String,
+    #[clap(short, long, conflicts_with = "bytecode_file")]
+    bytecode: Option<String>,
+
+    /// Bytecode file path
+    #[clap(long, conflicts_with = "bytecode", alias = "bf")]
+    bytecode_file: Option<std::path::PathBuf>,
+
 
     #[clap(short, long)]
     file: Option<String>,
@@ -32,13 +37,19 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    let bytecode = args.bytecode;
 
-    let bytecode = if let Some(stripped) = bytecode.strip_prefix("0x") {
-        stripped.to_string()
+    let bytecode = if let Some(bc) = args.bytecode {
+        bc.strip_prefix("0x").unwrap_or(&bc).to_string()
+    } else if let Some(file) = args.bytecode_file {
+        let mut file = File::open(file).unwrap();
+        let mut bytecode = String::new();
+        file.read_to_string(&mut bytecode).unwrap();
+        bytecode.trim().strip_prefix("0x").unwrap_or(&bytecode.trim()).to_string()
     } else {
-        bytecode
+        eprintln!("error: Missing bytecode argument or file path.");
+        std::process::exit(1);
     };
+
 
     let exps = if args.exp {
         vec![
@@ -61,12 +72,6 @@ fn main() {
         .for_each(|exp| opcode_jumpmap[exp.hex as usize] = Some(exp.str));
 
     EXP_OPCODE_JUMPMAP.set(opcode_jumpmap).unwrap();
-
-    /*let mut final_exps = OPCODE_JUMPMAP.get_mut().unwrap();
-    exps.iter()
-        .for_each(|exp| final_exps[exp.hex as usize] = Some(exp.str));*/
-
-    // let CELL: OnceCell<[Option<&'static str>; 256]> = OnceCell::with_value(final_exps);
 
     let mut parsed = parser::parse(bytecode, args.strip /*, exps*/);
 

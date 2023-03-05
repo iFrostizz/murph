@@ -32,7 +32,10 @@ impl OpCode {
     }
 
     pub fn is_valid(&self) -> bool {
-        EXP_OPCODE_JUMPMAP.get().unwrap()[self.0 as usize].is_some()
+        match EXP_OPCODE_JUMPMAP.get() {
+            Some(map) => map[self.0 as usize].is_some(),
+            _ => false,
+        }
     }
 }
 

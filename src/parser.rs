@@ -1,3 +1,4 @@
+use eyre::Context;
 use revm::opcode::{JUMP, JUMPDEST, JUMPI, RETURN};
 use std::collections::{HashMap, HashSet};
 
@@ -31,12 +32,11 @@ pub struct Parsed {
     pub jt: JumpTable,
 }
 
-pub fn parse<'a>(bytecode: String, strip: bool /*, opcode_jumpmap: Vec<&'a str>*/) -> Parsed {
-    let mut code = hex::decode(bytecode).unwrap();
+pub fn parse(bytecode: Vec<u8>, strip: bool) -> eyre::Result<Parsed> {
+    let mut code = bytecode;
 
     if strip {
         // strip until we meet RETURN
-
         let mut i: usize = 0;
 
         let index = loop {
@@ -47,7 +47,7 @@ pub fn parse<'a>(bytecode: String, strip: bool /*, opcode_jumpmap: Vec<&'a str>*
                 }
                 i += 1;
             } else {
-                panic!("Expected to find RETURN opcode in creation code")
+                eyre::bail!("Expected to find RETURN opcode in creation code")
             };
         };
 
@@ -160,8 +160,8 @@ pub fn parse<'a>(bytecode: String, strip: bool /*, opcode_jumpmap: Vec<&'a str>*
         }
     });
 
-    Parsed {
+    Ok(Parsed {
         sb: parsed,
         jt: jump_table,
-    }
+    })
 }

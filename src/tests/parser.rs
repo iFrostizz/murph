@@ -1,9 +1,5 @@
 #[cfg(test)]
 mod parser_test {
-    use std::collections::{HashMap, HashSet};
-
-    use revm::opcode::RETURNDATASIZE;
-
     use crate::{
         opcodes::{
             OpCode, ADD, CALLDATALOAD, DUP1, EQ, EXP_OPCODE_JUMPMAP, JUMP, JUMPDEST, JUMPI, MSTORE,
@@ -12,6 +8,8 @@ mod parser_test {
         parser::{self, JumpPack, JumpTable, JumpType},
         utils::{Byte, SourceByte},
     };
+    use revm::opcode::RETURNDATASIZE;
+    use std::collections::{HashMap, HashSet};
 
     fn init_opcode_jumpmap() {
         EXP_OPCODE_JUMPMAP.get_or_init(|| OPCODE_JUMPMAP);
@@ -21,8 +19,8 @@ mod parser_test {
     fn test_parse_add() {
         init_opcode_jumpmap();
 
-        let code = String::from("61010201");
-        let parsed = parser::parse(code, false).sb;
+        let code = hex::decode(String::from("61010201")).unwrap();
+        let parsed = parser::parse(code, false).unwrap().sb;
 
         assert_eq!(
             parsed,
@@ -47,8 +45,8 @@ mod parser_test {
     fn test_invalid_push() {
         init_opcode_jumpmap();
 
-        let code = String::from("6100");
-        let parsed = parser::parse(code, false).sb;
+        let code = hex::decode(String::from("6100")).unwrap();
+        let parsed = parser::parse(code, false).unwrap().sb;
 
         assert_eq!(
             parsed,
@@ -67,8 +65,8 @@ mod parser_test {
     fn test_jump_location() {
         init_opcode_jumpmap();
 
-        let code = String::from("6003565B");
-        let out = parser::parse(code, false);
+        let code = hex::decode(String::from("6003565B")).unwrap();
+        let out = parser::parse(code, false).unwrap();
         let (parsed, jump_table) = (out.sb, out.jt);
 
         assert_eq!(
@@ -108,8 +106,8 @@ mod parser_test {
     fn test_jumpi_location() {
         init_opcode_jumpmap();
 
-        let code = String::from("632222222214601C575B");
-        let out = parser::parse(code, false);
+        let code = hex::decode(String::from("632222222214601C575B")).unwrap();
+        let out = parser::parse(code, false).unwrap();
         let (parsed, jump_table) = (out.sb, out.jt);
 
         assert_eq!(
@@ -165,8 +163,8 @@ mod parser_test {
     fn test_simple_store() {
         init_opcode_jumpmap();
 
-        let code = String::from("60003560e01c8063552410771461001c5780632096525514610023575b6004356000555b60005460005260206000f3");
-        let out = parser::parse(code, false);
+        let code = hex::decode(String::from("60003560e01c8063552410771461001c5780632096525514610023575b6004356000555b60005460005260206000f3")).unwrap();
+        let out = parser::parse(code, false).unwrap();
         let (parsed, jump_table) = (out.sb, out.jt);
 
         assert_eq!(
@@ -337,8 +335,8 @@ mod parser_test {
         const TLOAD: u8 = 0xb3;
         const TSTORE: u8 = 0xb4;
 
-        let code = String::from("60ff6000b43db3");
-        let out = parser::parse(code, false);
+        let code = hex::decode(String::from("60ff6000b43db3")).unwrap();
+        let out = parser::parse(code, false).unwrap();
         let parsed = out.sb;
 
         assert_eq!(

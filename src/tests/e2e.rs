@@ -1,24 +1,24 @@
 #[cfg(test)]
 mod e2e_test {
-    use std::path::Path;
-    use std::process::Command;
+    use crate::{formatter, parser};
     use std::{
-        fs::File,
+        fs::{self, File},
         io::{self, Write},
+        path::Path,
+        process::Command,
     };
 
-    use crate::{formatter, parser};
-
     #[test]
-    fn test_is_transpiling_main() {
-        let (huffc, murph) = transpile_back("src/tests/data/", "main.huff");
-        assert_eq!(huffc, murph);
-    }
+    fn is_transpiling() {
+        let source = "src/tests/data/";
+        for entry in fs::read_dir(source).unwrap() {
+            let dir = entry.unwrap();
+            let path = dir.path();
+            let file = path.file_name().unwrap();
+            let (huffc, murph) = transpile_back(source, file.to_str().unwrap());
 
-    #[test]
-    fn test_is_transpiling_jump() {
-        let (huffc, murph) = transpile_back("src/tests/data/", "jumps.huff");
-        assert_eq!(huffc, murph);
+            assert_eq!(huffc, murph);
+        }
     }
 
     // check if huff -> runtime bytecode == murph -> huff -> runtime bytecode
@@ -30,7 +30,9 @@ mod e2e_test {
         let temp_path = root.join(temp_file);
 
         let huffc_bytecode = get_bytecode_from_path(get_path_str(&file_path));
-        let murph_code = formatter::to_huff(&mut parser::parse(huffc_bytecode.clone(), false));
+        let murph_code = formatter::to_huff(
+            &mut parser::parse(hex::decode(huffc_bytecode.clone()).unwrap(), false).unwrap(),
+        );
         save_temp_murph_file(&murph_code, get_path_str(&temp_path)).unwrap();
         let murph_bytecode = get_bytecode_from_path(get_path_str(&temp_path));
 

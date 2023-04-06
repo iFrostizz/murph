@@ -22,7 +22,6 @@ struct Args {
     #[clap(long, conflicts_with = "bytecode", alias = "bf")]
     bytecode_file: Option<std::path::PathBuf>,
 
-
     #[clap(short, long)]
     file: Option<String>,
 
@@ -30,7 +29,7 @@ struct Args {
     #[clap(short, long, default_value_t = false)]
     strip: bool,
 
-    /// Strip the creation code ?
+    /// Allow for experimental opcodes ? (currently only tstore & tload)
     #[clap(short, long, default_value_t = false)]
     exp: bool,
 }
@@ -44,12 +43,15 @@ fn main() {
         let mut file = File::open(file).unwrap();
         let mut bytecode = String::new();
         file.read_to_string(&mut bytecode).unwrap();
-        bytecode.trim().strip_prefix("0x").unwrap_or(&bytecode.trim()).to_string()
+        bytecode
+            .trim()
+            .strip_prefix("0x")
+            .unwrap_or(&bytecode.trim())
+            .to_string()
     } else {
         eprintln!("error: Missing bytecode argument or file path.");
         std::process::exit(1);
     };
-
 
     let exps = if args.exp {
         vec![
@@ -73,7 +75,8 @@ fn main() {
 
     EXP_OPCODE_JUMPMAP.set(opcode_jumpmap).unwrap();
 
-    let mut parsed = parser::parse(bytecode, args.strip /*, exps*/);
+    let bytecode = hex::decode(bytecode).unwrap();
+    let mut parsed = parser::parse(bytecode, args.strip).unwrap();
 
     let huff = formatter::to_huff(&mut parsed);
 

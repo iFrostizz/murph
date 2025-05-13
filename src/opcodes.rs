@@ -134,10 +134,10 @@ pub static OPCODE_JUMPMAP: [Option<&'static str>; 256] = [
     /* 0x59 */ Some("MSIZE"),
     /* 0x5a */ Some("GAS"),
     /* 0x5b */ Some("JUMPDEST"),
-    /* 0x5c */ None,
-    /* 0x5d */ None,
+    /* 0x5c */ Some("TLOAD"),
+    /* 0x5d */ Some("TSTORE"),
     /* 0x5e */ None,
-    /* 0x5f */ None,
+    /* 0x5f */ Some("PUSH0"),
     /* 0x60 */ Some("PUSH1"),
     /* 0x61 */ Some("PUSH2"),
     /* 0x62 */ Some("PUSH3"),
@@ -344,6 +344,9 @@ pub const JUMPI: u8 = 0x57;
 pub const PC: u8 = 0x58;
 pub const MSIZE: u8 = 0x59;
 pub const JUMPDEST: u8 = 0x5b;
+pub const TLOAD: u8 = 0x5c;
+pub const TSTORE: u8 = 0x5d;
+pub const PUSH0: u8 = 0x5f;
 pub const PUSH1: u8 = 0x60;
 pub const PUSH2: u8 = 0x61;
 pub const PUSH3: u8 = 0x62;

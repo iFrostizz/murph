@@ -3,7 +3,7 @@ mod parser_test {
     use crate::{
         opcodes::{
             OpCode, ADD, CALLDATALOAD, DUP1, EQ, EXP_OPCODE_JUMPMAP, JUMP, JUMPDEST, JUMPI, MSTORE,
-            OPCODE_JUMPMAP, PUSH1, PUSH2, PUSH4, RETURN, SHR, SLOAD, SSTORE,
+            OPCODE_JUMPMAP, PUSH0, PUSH1, PUSH2, PUSH4, RETURN, SHR, SLOAD, SSTORE, TLOAD, TSTORE,
         },
         parser::{self, JumpPack, JumpTable, JumpType},
         utils::{Byte, SourceByte},
@@ -328,14 +328,74 @@ mod parser_test {
     #[test]
     fn test_exp_opcodes() {
         let mut base_jumpmap = OPCODE_JUMPMAP;
-        base_jumpmap[0xb3_usize] = Some("tload");
-        base_jumpmap[0xb4_usize] = Some("tstore");
+        // Define some experimental opcodes in unused opcode slots
+        base_jumpmap[0xb3_usize] = Some("xload");
+        base_jumpmap[0xb4_usize] = Some("xstore");
         EXP_OPCODE_JUMPMAP.get_or_init(|| base_jumpmap);
 
-        const TLOAD: u8 = 0xb3;
-        const TSTORE: u8 = 0xb4;
+        // Define the experimental opcode constants
+        const XLOAD: u8 = 0xb3;
+        const XSTORE: u8 = 0xb4;
 
+        // Create bytecode that uses our experimental opcodes
         let code = hex::decode(String::from("60ff6000b43db3")).unwrap();
+        let out = parser::parse(code, false).unwrap();
+        let parsed = out.sb;
+
+        assert_eq!(
+            parsed,
+            vec![
+                SourceByte {
+                    byte: vec![Byte::Op(OpCode::new(PUSH1)), Byte::Hex(String::from("ff")),],
+                    pc: 0
+                },
+                SourceByte {
+                    byte: vec![Byte::Op(OpCode::new(PUSH1)), Byte::Hex(String::from("00")),],
+                    pc: 2
+                },
+                SourceByte {
+                    byte: vec![Byte::Op(OpCode::new(XSTORE))],
+                    pc: 4
+                },
+                SourceByte {
+                    byte: vec![Byte::Op(OpCode::new(RETURNDATASIZE))],
+                    pc: 5
+                },
+                SourceByte {
+                    byte: vec![Byte::Op(OpCode::new(XLOAD))],
+                    pc: 6
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn test_push0() {
+        init_opcode_jumpmap();
+        
+        let code = hex::decode(String::from("5f01")).unwrap();
+        let parsed = parser::parse(code, false).unwrap().sb;
+
+        assert_eq!(
+            parsed,
+            vec![
+                SourceByte {
+                    byte: vec![Byte::Op(OpCode::new(PUSH0))],
+                    pc: 0
+                },
+                SourceByte {
+                    byte: vec![Byte::Op(OpCode::new(ADD))],
+                    pc: 1
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn test_transient_storage() {
+        init_opcode_jumpmap();
+        
+        let code = hex::decode(String::from("60ff60005d3d5c")).unwrap();
         let out = parser::parse(code, false).unwrap();
         let parsed = out.sb;
 

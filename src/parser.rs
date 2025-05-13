@@ -1,4 +1,3 @@
-use eyre::Context;
 use revm::opcode::{JUMP, JUMPDEST, JUMPI, RETURN};
 use std::collections::{HashMap, HashSet};
 

@@ -1,5 +1,3 @@
-#![feature(once_cell)]
-
 use clap::Parser;
 use opcodes::{ExpOpCode, EXP_OPCODE_JUMPMAP, OPCODE_JUMPMAP};
 use std::{fs::File, io::Read, io::Write};

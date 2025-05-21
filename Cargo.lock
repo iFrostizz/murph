@@ -417,7 +417,6 @@ dependencies = [
  "clap",
  "eyre",
  "hex",
- "lazy_static",
  "once_cell",
  "revm",
 ]

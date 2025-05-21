@@ -12,7 +12,7 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
 
         if byte.len() > 1 {
             // is push + hex
-            let (_, hex) = (byte.get(0).unwrap(), byte.get(1..).unwrap());
+            let (_, hex) = (byte.first().unwrap(), byte.get(1..).unwrap());
 
             let hex = hex
                 .iter()
@@ -27,7 +27,7 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
 
             // If next is a push, don't push to huff
             if let Some(c) = parsed.sb.get(i + 1) {
-                if let Byte::Op(op) = c.byte.get(0).unwrap() {
+                if let Byte::Op(op) = c.byte.first().unwrap() {
                     match op.0 {
                         JUMP | JUMPI => (),
                         _ => {
@@ -47,7 +47,7 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
             // is either opcode or single hex
 
             huff.push_str("\n\u{20}\u{20}");
-            match byte.get(0).unwrap() {
+            match byte.first().unwrap() {
                 Byte::Hex(h) => {
                     // huff.push_str(h);
                     unreachable!("Having a hex without push: {}", h);
@@ -63,8 +63,8 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
 
                                 if let Some(dest) = parsed.jt.jump.get(&chunk.pc) {
                                     // if current pc has a parsed dest
-                                    if let Some(..) = parsed.sb.get(i - 1) {
-                                        if parsed.jt.jumpdest.get(&dest.pc).is_some() {
+                                    if parsed.sb.get(i - 1).is_some() {
+                                        if parsed.jt.jumpdest.contains(&dest.pc) {
                                             let mut out = jump_type;
                                             out.push_str(&format!("_{}\n\u{20}\u{20}", dest.pc));
                                             out.push_str(&o.as_str().to_ascii_lowercase());
@@ -88,7 +88,7 @@ pub fn to_huff(parsed: &mut Parsed) -> String {
                                 }
                             }
                             JUMPDEST => {
-                                if parsed.jt.jumpdest.get(&chunk.pc).is_some() {
+                                if parsed.jt.jumpdest.contains(&chunk.pc) {
                                     let mut out = String::from("jump_");
 
                                     out.push_str(&format!("{}:", chunk.pc));

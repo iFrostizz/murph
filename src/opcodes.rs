@@ -19,11 +19,7 @@ impl OpCode {
     }
 
     pub fn as_str(&self) -> &'static str {
-        if let Some(str) = EXP_OPCODE_JUMPMAP.get().unwrap()[self.0 as usize] {
-            str
-        } else {
-            "unknown"
-        }
+        EXP_OPCODE_JUMPMAP.get().unwrap()[self.0 as usize].unwrap_or("unknown")
     }
 
     #[inline(always)]

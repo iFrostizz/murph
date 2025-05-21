@@ -27,7 +27,8 @@ struct Args {
     #[clap(short, long, default_value_t = false)]
     strip: bool,
 
-    /// Allow for experimental opcodes ? (currently only tstore & tload)
+    /// Allow for experimental opcodes ?
+    /// Caution: this flag does not have any effect right now.
     #[clap(short, long, default_value_t = false)]
     exp: bool,
 }

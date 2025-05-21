@@ -27,7 +27,8 @@ struct Args {
     #[clap(short, long, default_value_t = false)]
     strip: bool,
 
-    /// Allow for experimental opcodes ? (currently only tstore & tload)
+    /// Allow for experimental opcodes ?
+    /// Caution: this flag does not have any effect right now.
     #[clap(short, long, default_value_t = false)]
     exp: bool,
 }
@@ -44,23 +45,26 @@ fn main() {
         bytecode
             .trim()
             .strip_prefix("0x")
-            .unwrap_or(&bytecode.trim())
+            .unwrap_or(bytecode.trim())
             .to_string()
     } else {
         eprintln!("error: Missing bytecode argument or file path.");
         std::process::exit(1);
     };
 
-    let exps = if args.exp {
+    #[allow(clippy::if_same_then_else)]
+    let exps: Vec<ExpOpCode> = if args.exp {
+        println!("caution: experimental opcodes are not used.");
         vec![
-            ExpOpCode {
-                hex: 0xb3,
-                str: "tload",
-            },
-            ExpOpCode {
-                hex: 0xb4,
-                str: "tstore",
-            },
+            // experimental: can add a list of opcodes in the form:
+            // ExpOpCode {
+            //     hex: 0xb3,
+            //     str: "tload",
+            // },
+            // ExpOpCode {
+            //     hex: 0xb4,
+            //     str: "tstore",
+            // },
         ]
     } else {
         vec![]

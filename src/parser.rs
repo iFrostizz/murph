@@ -8,8 +8,8 @@ use crate::{
 
 #[derive(PartialEq, Eq, Debug, Hash)]
 pub enum JumpType {
-    JUMP,
-    JUMPI,
+    Jump,
+    Jumpi,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash)]
@@ -104,7 +104,7 @@ pub fn parse(bytecode: Vec<u8>, strip: bool) -> eyre::Result<Parsed> {
                         jump_table.jumpdest.insert(pc);
                     } else if op_val == JUMP || op_val == JUMPI {
                         if let Some(source_hex) = parsed.last() {
-                            if let Some(Byte::Op(op)) = source_hex.byte.get(0) {
+                            if let Some(Byte::Op(op)) = source_hex.byte.first() {
                                 if op.is_push() {
                                     let push_size = op.push_size();
                                     let hex = source_hex
@@ -126,9 +126,9 @@ pub fn parse(bytecode: Vec<u8>, strip: bool) -> eyre::Result<Parsed> {
                                         JumpPack {
                                             pc: dest,
                                             jump_type: if op_val == JUMP {
-                                                JumpType::JUMP
+                                                JumpType::Jump
                                             } else {
-                                                JumpType::JUMPI
+                                                JumpType::Jumpi
                                             },
                                         },
                                     );

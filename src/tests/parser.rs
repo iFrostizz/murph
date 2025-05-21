@@ -94,7 +94,7 @@ mod parser_test {
                     2,
                     JumpPack {
                         pc: 3,
-                        jump_type: JumpType::JUMP
+                        jump_type: JumpType::Jump
                     }
                 )]),
                 jumpdest: HashSet::from([3])
@@ -150,7 +150,7 @@ mod parser_test {
                     8,
                     JumpPack {
                         pc: 28,
-                        jump_type: JumpType::JUMPI
+                        jump_type: JumpType::Jumpi
                     }
                 )]),
                 // loc
@@ -309,14 +309,14 @@ mod parser_test {
                         16,
                         JumpPack {
                             pc: 28,
-                            jump_type: JumpType::JUMPI
+                            jump_type: JumpType::Jumpi
                         }
                     ),
                     (
                         27,
                         JumpPack {
                             pc: 35,
-                            jump_type: JumpType::JUMPI
+                            jump_type: JumpType::Jumpi
                         }
                     )
                 ]),
